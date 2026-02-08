@@ -1,6 +1,9 @@
 import requests
 import os
 from twilio.rest import Client
+import feedparser
+from datetime import datetime, timedelta
+
 
 def shorten_url(long_url):
     try:
@@ -13,65 +16,39 @@ def shorten_url(long_url):
     except:
         return long_url
 
-def get_kannada_news():
-    API_KEY = os.getenv("NEWSDATA_API")
+def get_kalaburagi_news():
+    url = "https://news.google.com/rss/search?q=Kalaburagi&hl=kn&gl=IN&ceid=IN:kn"
 
-    if not API_KEY:
-        return "❌ API key not found"
+    feed = feedparser.parse(url)
 
-    url = f"https://newsdata.io/api/1/news?apikey={API_KEY}&language=kn&country=in"
+    if not feed.entries:
+        return "❌ ಸುದ್ದಿ ಲಭ್ಯವಿಲ್ಲ."
 
-    try:
-        response = requests.get(url, timeout=15)
-        data = response.json()
-        print("API response received")
-    except Exception as e:
-        return f"❌ API request failed: {str(e)}"
-
-    results = data.get("results", [])
-
-    print("Total results:", len(results))
-
-    if not isinstance(results, list) or len(results) == 0:
-        return "❌ No news available."
-
-    msg = "📰 ಕಲಬುರಗಿ ಪ್ರಮುಖ ಸುದ್ದಿ\n\n"
-
-    kalaburagi_news = []
-
-    for article in results:
-        title = article.get("title", "")
-        description = article.get("description", "")
-        link = article.get("link", "")
-
-        print("Checking:", title)
-
-        if not link:
-            continue
-
-        text = (title + " " + description).lower()
-
-        if (
-            "kalaburagi" in text
-            or "gulbarga" in text
-            or "ಕಲಬುರಗಿ" in text
-            or "ಕಲಬುರಗಿಯಲ್ಲಿ" in text
-            or "ಕಲಬುರಗಿಯ" in text
-        ):
-            print("Matched Kalaburagi:", title)
-            short_link = shorten_url(link)
-            kalaburagi_news.append((title, short_link))
-
-        if len(kalaburagi_news) >= 7:
-            break
-
-    if len(kalaburagi_news) == 0:
-        return "❌ ಇಂದು ಕಲಬುರಗಿ ಸಂಬಂಧಿಸಿದ ಸುದ್ದಿ ಲಭ್ಯವಿಲ್ಲ."
+    msg = "📰 ಕಲಬುರಗಿ 24 ಗಂಟೆಯ ಪ್ರಮುಖ ಸುದ್ದಿ\n\n"
 
     count = 1
-    for title, link in kalaburagi_news:
-        msg += f"{count}. {title}\n{link}\n\n"
+    now = datetime.utcnow()
+
+    for entry in feed.entries:
+        published = entry.get("published_parsed")
+
+        if published:
+            pub_time = datetime(*published[:6])
+            if now - pub_time > timedelta(hours=24):
+                continue
+
+        title = entry.title
+        link = entry.link
+        short_link = shorten_url(link)
+
+        msg += f"{count}. {title}\n{short_link}\n\n"
         count += 1
+
+        if count > 7:
+            break
+
+    if count == 1:
+        return "❌ ಕಳೆದ 24 ಗಂಟೆಯಲ್ಲಿ ಕಲಬುರಗಿ ಸುದ್ದಿ ಲಭ್ಯವಿಲ್ಲ."
 
     msg += "ಶುಭೋದಯ ☀️"
     return msg
