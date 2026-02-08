@@ -24,10 +24,13 @@ def get_kannada_news():
     try:
         response = requests.get(url, timeout=15)
         data = response.json()
+        print("API response received")
     except Exception as e:
         return f"❌ API request failed: {str(e)}"
 
     results = data.get("results", [])
+
+    print("Total results:", len(results))
 
     if not isinstance(results, list) or len(results) == 0:
         return "❌ No news available."
@@ -37,35 +40,37 @@ def get_kannada_news():
     kalaburagi_news = []
     general_news = []
 
-for article in results:
-    title = article.get("title", "")
-    description = article.get("description", "")
-    link = article.get("link", "")
+    for article in results:
+        title = article.get("title", "")
+        description = article.get("description", "")
+        link = article.get("link", "")
 
-    if not link:
-        continue
+        print("Checking:", title)
 
-    short_link = shorten_url(link)
+        if not link:
+            continue
 
-    text = (title + " " + description).lower()
+        short_link = shorten_url(link)
+        text = (title + " " + description).lower()
 
-    if (
-        "kalaburagi" in text
-        or "gulbarga" in text
-        or "ಕಲಬುರಗಿ" in text
-        or "ಕಲಬುರಗಿಯಲ್ಲಿ" in text
-        or "ಕಲಬುರಗಿಯ" in text
-    ):
-        if len(kalaburagi_news) < 2:
-            kalaburagi_news.append((title, short_link))
-    else:
-        if len(general_news) < 7:
-            general_news.append((title, short_link))
+        if (
+            "kalaburagi" in text
+            or "gulbarga" in text
+            or "ಕಲಬುರಗಿ" in text
+            or "ಕಲಬುರಗಿಯಲ್ಲಿ" in text
+            or "ಕಲಬುರಗಿಯ" in text
+        ):
+            print("Matched Kalaburagi:", title)
+            if len(kalaburagi_news) < 2:
+                kalaburagi_news.append((title, short_link))
+        else:
+            if len(general_news) < 7:
+                general_news.append((title, short_link))
 
         if len(kalaburagi_news) >= 2 and len(general_news) >= 7:
             break
 
-    # If not enough Kalaburagi news, fill from general
+    # Fill if not enough Kalaburagi news
     while len(kalaburagi_news) < 2 and general_news:
         kalaburagi_news.append(general_news.pop(0))
 
@@ -83,7 +88,7 @@ for article in results:
 
     msg += "ಶುಭೋದಯ ☀️"
     return msg
-
+    
 def send_whatsapp(message):
     account_sid = os.getenv("TWILIO_ACCOUNT_SID")
     auth_token = os.getenv("TWILIO_AUTH_TOKEN")
