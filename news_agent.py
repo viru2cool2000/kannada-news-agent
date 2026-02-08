@@ -3,6 +3,18 @@ import os
 from twilio.rest import Client
 
 
+def shorten_url(long_url):
+    try:
+        short = requests.get(
+            "https://tinyurl.com/api-create.php",
+            params={"url": long_url},
+            timeout=10
+        )
+        return short.text
+    except:
+        return long_url
+
+
 def get_kannada_news():
     API_KEY = os.getenv("NEWSDATA_API")
 
@@ -17,22 +29,57 @@ def get_kannada_news():
     except Exception as e:
         return f"❌ API request failed: {str(e)}"
 
-    msg = "📰 ಇಂದಿನ ಪ್ರಮುಖ ಕನ್ನಡ ಸುದ್ದಿ\n\n"
-
     results = data.get("results", [])
 
     if not isinstance(results, list) or len(results) == 0:
-        return f"❌ No news available.\nAPI Response: {data}"
+        return "❌ No news available."
 
-    for i, article in enumerate(results[:5], 1):
-        title = article.get("title", "ಸುದ್ದಿ ಶೀರ್ಷಿಕೆ ಲಭ್ಯವಿಲ್ಲ")
+    msg = "📰 ಇಂದಿನ ಪ್ರಮುಖ ಕನ್ನಡ ಸುದ್ದಿ\n\n"
+
+    kalaburagi_news = []
+    general_news = []
+
+    for article in results:
+        title = article.get("title", "")
         link = article.get("link", "")
 
-        msg += f"{i}. {title}\n{link}\n\n"
+        if not link:
+            continue
+
+        short_link = shorten_url(link)
+
+        # Check for Kalaburagi keywords
+        if (
+            "kalaburagi" in title.lower()
+            or "gulbarga" in title.lower()
+            or "ಕಲಬುರಗಿ" in title
+        ):
+            if len(kalaburagi_news) < 2:
+                kalaburagi_news.append((title, short_link))
+        else:
+            if len(general_news) < 5:
+                general_news.append((title, short_link))
+
+        if len(kalaburagi_news) >= 2 and len(general_news) >= 5:
+            break
+
+    count = 1
+
+    # Add Kalaburagi news first
+    if kalaburagi_news:
+        msg += "📍 ಕಲಬುರಗಿ ಸುದ್ದಿ\n\n"
+        for title, link in kalaburagi_news:
+            msg += f"{count}. {title}\n{link}\n\n"
+            count += 1
+
+    # Add general news
+    msg += "🗞 ಪ್ರಮುಖ ರಾಜ್ಯ/ದೇಶ ಸುದ್ದಿ\n\n"
+    for title, link in general_news:
+        msg += f"{count}. {title}\n{link}\n\n"
+        count += 1
 
     msg += "ಶುಭೋದಯ ☀️"
     return msg
-
 
 def send_whatsapp(message):
     account_sid = os.getenv("TWILIO_ACCOUNT_SID")
