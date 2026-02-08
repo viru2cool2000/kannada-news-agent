@@ -2,6 +2,16 @@ import requests
 import os
 from twilio.rest import Client
 
+def shorten_url(long_url):
+    try:
+        short = requests.get(
+            "https://tinyurl.com/api-create.php",
+            params={"url": long_url},
+            timeout=10
+        )
+        return short.text
+    except:
+        return long_url
 
 def get_kannada_news():
     API_KEY = os.getenv("NEWSDATA_API")
