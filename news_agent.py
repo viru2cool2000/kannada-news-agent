@@ -37,7 +37,7 @@ def get_kannada_news():
     kalaburagi_news = []
     general_news = []
 
-    for article in results:
+for article in results:
     title = article.get("title", "")
     description = article.get("description", "")
     link = article.get("link", "")
