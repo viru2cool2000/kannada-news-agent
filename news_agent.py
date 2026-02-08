@@ -15,9 +15,9 @@ def shorten_url(long_url):
         return short.text
     except:
         return long_url
-
 def get_kalaburagi_news():
-    url = "https://news.google.com/rss/search?q=Kalaburagi&hl=kn&gl=IN&ceid=IN:kn"
+    # Search multiple spellings
+    url = "https://news.google.com/rss/search?q=Kalaburagi+OR+Kalburgi+OR+Kalaburgi+OR+Gulbarga&hl=kn&gl=IN&ceid=IN:kn"
 
     feed = feedparser.parse(url)
 
@@ -32,6 +32,7 @@ def get_kalaburagi_news():
     for entry in feed.entries:
         published = entry.get("published_parsed")
 
+        # Filter last 24 hours
         if published:
             pub_time = datetime(*published[:6])
             if now - pub_time > timedelta(hours=24):
