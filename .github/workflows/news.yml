@@ -22,9 +22,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run news agent
+        run: python news_agent.py
         env:
           NEWSDATA_API: ${{ secrets.NEWSDATA_API }}
-          TWILIO_SID: ${{ secrets.TWILIO_SID }}
-          TWILIO_AUTH: ${{ secrets.TWILIO_AUTH }}
-          WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
-        run: python news_agent.py
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
