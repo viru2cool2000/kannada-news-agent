@@ -35,10 +35,9 @@ def get_kannada_news():
     if not isinstance(results, list) or len(results) == 0:
         return "❌ No news available."
 
-    msg = "📰 ಇಂದಿನ ಪ್ರಮುಖ ಕನ್ನಡ ಸುದ್ದಿ\n\n"
+    msg = "📰 ಕಲಬುರಗಿ ಪ್ರಮುಖ ಸುದ್ದಿ\n\n"
 
     kalaburagi_news = []
-    general_news = []
 
     for article in results:
         title = article.get("title", "")
@@ -50,7 +49,6 @@ def get_kannada_news():
         if not link:
             continue
 
-        short_link = shorten_url(link)
         text = (title + " " + description).lower()
 
         if (
@@ -61,28 +59,17 @@ def get_kannada_news():
             or "ಕಲಬುರಗಿಯ" in text
         ):
             print("Matched Kalaburagi:", title)
-            if len(kalaburagi_news) < 2:
-                kalaburagi_news.append((title, short_link))
-        else:
-            if len(general_news) < 7:
-                general_news.append((title, short_link))
+            short_link = shorten_url(link)
+            kalaburagi_news.append((title, short_link))
 
-        if len(kalaburagi_news) >= 2 and len(general_news) >= 7:
+        if len(kalaburagi_news) >= 7:
             break
 
-    # Fill if not enough Kalaburagi news
-    while len(kalaburagi_news) < 2 and general_news:
-        kalaburagi_news.append(general_news.pop(0))
+    if len(kalaburagi_news) == 0:
+        return "❌ ಇಂದು ಕಲಬುರಗಿ ಸಂಬಂಧಿಸಿದ ಸುದ್ದಿ ಲಭ್ಯವಿಲ್ಲ."
 
     count = 1
-
-    msg += "📍 ಕಲಬುರಗಿ ಸುದ್ದಿ\n\n"
     for title, link in kalaburagi_news:
-        msg += f"{count}. {title}\n{link}\n\n"
-        count += 1
-
-    msg += "🗞 ಪ್ರಮುಖ ರಾಜ್ಯ/ದೇಶ ಸುದ್ದಿ\n\n"
-    for title, link in general_news[:5]:
         msg += f"{count}. {title}\n{link}\n\n"
         count += 1
 
