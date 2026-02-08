@@ -73,6 +73,6 @@ def send_whatsapp(message):
 
 
 if __name__ == "__main__":
-    news = get_kannada_news()
+    news = get_kalaburagi_news()
     print(news)  # visible in GitHub logs
     send_whatsapp(news)
