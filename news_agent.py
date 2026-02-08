@@ -38,24 +38,29 @@ def get_kannada_news():
     general_news = []
 
     for article in results:
-        title = article.get("title", "")
-        link = article.get("link", "")
+    title = article.get("title", "")
+    description = article.get("description", "")
+    link = article.get("link", "")
 
-        if not link:
-            continue
+    if not link:
+        continue
 
-        short_link = shorten_url(link)
+    short_link = shorten_url(link)
 
-        if (
-            "kalaburagi" in title.lower()
-            or "gulbarga" in title.lower()
-            or "ಕಲಬುರಗಿ" in title
-        ):
-            if len(kalaburagi_news) < 2:
-                kalaburagi_news.append((title, short_link))
-        else:
-            if len(general_news) < 7:
-                general_news.append((title, short_link))
+    text = (title + " " + description).lower()
+
+    if (
+        "kalaburagi" in text
+        or "gulbarga" in text
+        or "ಕಲಬುರಗಿ" in text
+        or "ಕಲಬುರಗಿಯಲ್ಲಿ" in text
+        or "ಕಲಬುರಗಿಯ" in text
+    ):
+        if len(kalaburagi_news) < 2:
+            kalaburagi_news.append((title, short_link))
+    else:
+        if len(general_news) < 7:
+            general_news.append((title, short_link))
 
         if len(kalaburagi_news) >= 2 and len(general_news) >= 7:
             break
